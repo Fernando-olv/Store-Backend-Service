@@ -212,6 +212,7 @@ __marimo__/
 *.tfstate.*
 *.tfvars
 *.tfvars.json
+!terraform/envs/dev.tfvars
 override.tf
 override.tf.json
 *_override.tf
