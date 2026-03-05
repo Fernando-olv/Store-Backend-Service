@@ -208,6 +208,8 @@ __marimo__/
 
 # Terraform: state, local config, and secrets
 .terraform/
+tfplan
+.tfplan
 *.tfstate
 *.tfstate.*
 *.tfvars
