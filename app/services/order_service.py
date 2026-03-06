@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from google.cloud import firestore
 
@@ -50,7 +50,7 @@ class OrderService:
                 {
                     "quantity": new_qty,
                     "status": derive_status(new_qty),
-                    "updated_at": datetime.now(UTC),
+                    "updated_at": datetime.now(timezone.utc),
                 },
             )
 
@@ -58,7 +58,7 @@ class OrderService:
                 order_ref,
                 {
                     "order_id": order_ref.id,
-                    "created_at": datetime.now(UTC),
+                    "created_at": datetime.now(timezone.utc),
                     "buyer_email": buyer_email,
                     "product_id": payload.product_id,
                     "quantity": payload.quantity,

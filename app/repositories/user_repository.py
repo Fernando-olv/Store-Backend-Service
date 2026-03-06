@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from google.cloud import firestore
 
@@ -19,7 +19,7 @@ class UserRepository:
         payload = {
             "email": email,
             "password_hash": password_hash,
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
         }
         self._collection.document(email).set(payload)
         return payload

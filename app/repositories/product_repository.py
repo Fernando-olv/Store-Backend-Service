@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from google.cloud import firestore
 
@@ -10,7 +10,7 @@ class ProductRepository:
 
     def create(self, product_name: str, quantity: int, status: str, product_id: str | None = None) -> dict:
         resolved_id = product_id or str(uuid.uuid4())
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         payload = {
             "product_id": resolved_id,
             "product_name": product_name,
@@ -40,7 +40,7 @@ class ProductRepository:
             "product_name": product_name,
             "quantity": quantity,
             "status": status,
-            "updated_at": datetime.now(UTC),
+            "updated_at": datetime.now(timezone.utc),
         }
         doc_ref.update(updates)
         updated = doc_ref.get().to_dict() or {}

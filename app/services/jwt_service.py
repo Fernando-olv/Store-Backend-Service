@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 
@@ -14,7 +14,7 @@ class JWTService:
         return self._expiration_minutes
 
     def create_access_token(self, subject: str) -> str:
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         payload = {
             "sub": subject,
             "iat": int(now.timestamp()),
