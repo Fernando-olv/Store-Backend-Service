@@ -62,6 +62,12 @@ variable "memory" {
   default     = "512Mi"
 }
 
+variable "jwt_secret" {
+  description = "JWT signing secret used by the API"
+  type        = string
+  sensitive   = true
+}
+
 variable "disable_project_apis_on_destroy" {
   description = "Disable managed project APIs when running terraform destroy"
   type        = bool

@@ -4,8 +4,9 @@ This stack deploys the Store Backend Service to Cloud Run in `dev` on GCP.
 
 ## What it creates
 
-- Required project APIs
+- Required project APIs (including Firestore API)
 - Runtime service account
+- Runtime service account IAM role `roles/datastore.user`
 - Artifact Registry Docker repository
 - Cloud Run service
 - Optional public invoker IAM binding (`allUsers`)
@@ -16,10 +17,9 @@ This stack deploys the Store Backend Service to Cloud Run in `dev` on GCP.
 - `gcloud` authenticated
 - ADC configured (`gcloud auth application-default login`)
 - Existing remote state bucket
+- Firestore database initialized in project
 
 ## 1) Initialize backend
-
-Use your existing state bucket:
 
 ```bash
 terraform init -reconfigure \
@@ -39,9 +39,7 @@ terraform plan -var-file=envs/dev.tfvars
 terraform apply -var-file=envs/dev.tfvars
 ```
 
-## 4) Build and push image (manual for Stage 1)
-
-Create Artifact Registry repo first via `apply`, then push image:
+## 4) Build and push image
 
 ```bash
 gcloud auth configure-docker us-central1-docker.pkg.dev
@@ -50,7 +48,7 @@ docker build -t us-central1-docker.pkg.dev/directed-relic-489223-a2/store-backen
 docker push us-central1-docker.pkg.dev/directed-relic-489223-a2/store-backend-service-dev/store-backend-service:dev
 ```
 
-Run another apply to deploy the pushed image:
+Then apply again:
 
 ```bash
 terraform apply -var-file=envs/dev.tfvars
@@ -65,7 +63,7 @@ curl "$SERVICE_URL/health"
 
 ## Notes
 
+- `jwt_secret` is required by Terraform (`envs/dev.tfvars`).
 - Stage 1 keeps `allow_unauthenticated = true` for simple external testing.
-- Hardening (private ingress, IAM-only access, secrets) is planned for Stage 2.
-- `disable_project_apis_on_destroy = true` in `envs/dev.tfvars` makes `terraform destroy` disable the managed APIs as part of teardown.
-- The remote state bucket is bootstrap infrastructure and is not managed by this root module.
+- `disable_project_apis_on_destroy = true` in `envs/dev.tfvars` makes `terraform destroy` disable managed APIs.
+- Remote state bucket is bootstrap infrastructure and is not managed by this root module.

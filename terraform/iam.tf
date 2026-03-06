@@ -5,3 +5,9 @@ resource "google_service_account" "runtime" {
 
   depends_on = [google_project_service.required]
 }
+
+resource "google_project_iam_member" "runtime_firestore_user" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.runtime.email}"
+}

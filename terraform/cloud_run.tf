@@ -20,6 +20,21 @@ resource "google_cloud_run_v2_service" "api" {
         container_port = var.container_port
       }
 
+      env {
+        name  = "FIRESTORE_PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name  = "JWT_SECRET"
+        value = var.jwt_secret
+      }
+
+      env {
+        name  = "JWT_EXPIRATION_MINUTES"
+        value = "60"
+      }
+
       resources {
         limits = {
           cpu    = var.cpu

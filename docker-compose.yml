@@ -1,9 +1,33 @@
 services:
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: >
+      gcloud beta emulators firestore start
+      --host-port=0.0.0.0:8080
+      --project=${FIRESTORE_PROJECT_ID:-store-backend-local}
+      --quiet
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('localhost', 8080), 2); s.close()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
   api:
     build:
       context: .
       dockerfile: Dockerfile
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      firestore-emulator:
+        condition: service_healthy
+    environment:
+      FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
+      FIRESTORE_PROJECT_ID: ${FIRESTORE_PROJECT_ID:-store-backend-local}
+      JWT_SECRET: ${JWT_SECRET:-change-me-local}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-60}
     ports:
       - "8000:8000"
     volumes:

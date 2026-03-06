@@ -13,3 +13,4 @@ max_instances          = 2
 cpu                    = "1"
 memory                 = "512Mi"
 disable_project_apis_on_destroy = true
+jwt_secret             = "change-me-in-prod"
