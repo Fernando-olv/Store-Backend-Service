@@ -50,3 +50,25 @@ Current Terraform configuration includes:
 
 - Remote state backend is GCS.
 - Backend bucket itself is bootstrap infra, managed outside this root module.
+
+## GitHub Actions CI/CD (Dev)
+
+The workflow `.github/workflows/ci-cd.yml` runs on every push:
+
+- Always: unit tests, integration tests, `terraform plan`, Docker build check
+- `main` only: Docker push + `terraform apply` + Cloud Run `/health` verification
+
+Required GitHub repository **Secrets**:
+
+- `GCP_WIF_PROVIDER`
+- `GCP_WIF_SERVICE_ACCOUNT`
+- `TF_BACKEND_BUCKET`
+- `TF_BACKEND_PREFIX`
+- `TF_VAR_JWT_SECRET`
+
+Required GitHub repository **Variables**:
+
+- `GCP_PROJECT_ID`
+- `GCP_REGION`
+- `AR_REPOSITORY`
+- `IMAGE_NAME`

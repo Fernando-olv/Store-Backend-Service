@@ -10,7 +10,7 @@ FIRESTORE_PROJECT_ID ?= store-backend-local
 JWT_SECRET ?= change-me-local
 JWT_EXPIRATION_MINUTES ?= 60
 
-.PHONY: up down logs emulator-logs health rebuild ps prod prod-down test lint format tf-init tf-plan tf-apply seed-products
+.PHONY: up down logs emulator-logs health rebuild ps prod prod-down test test-unit test-integration lint format tf-init tf-plan tf-apply seed-products
 
 up:
 	@if docker compose version >/dev/null 2>&1; then \
@@ -115,7 +115,13 @@ prod-down:
 	docker rm -f $(PROD_CONTAINER) >/dev/null 2>&1 || true
 
 test:
-	pytest
+	$(MAKE) test-unit
+
+test-unit:
+	pytest -q tests/test_*.py
+
+test-integration:
+	pytest -q tests/integration
 
 lint:
 	ruff check .

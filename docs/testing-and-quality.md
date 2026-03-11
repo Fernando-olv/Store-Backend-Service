@@ -2,7 +2,9 @@
 
 ## Test Commands
 
-- `make test` -> runs `pytest`
+- `make test` -> runs unit tests (`make test-unit`)
+- `make test-unit` -> runs unit tests (`tests/test_*.py`)
+- `make test-integration` -> runs integration tests (`tests/integration`)
 - `pytest -q` -> direct test run
 
 ## Static Quality Commands
