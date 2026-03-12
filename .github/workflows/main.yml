@@ -11,10 +11,6 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
-  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'directed-relic-489223-a2' }}
-  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
-  AR_REPOSITORY: ${{ vars.AR_REPOSITORY || 'store-backend-service-dev' }}
-  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'store-backend-service' }}
 
 jobs:
   unit_tests:
@@ -90,11 +86,19 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
     env:
-      IMAGE_URI: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       TF_JWT_SECRET: ${{ secrets.TF_VAR_JWT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Compute deployment variables
+        run: |
+          set -euo pipefail
+          echo "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID || 'directed-relic-489223-a2' }}" >> "${GITHUB_ENV}"
+          echo "GCP_REGION=${{ vars.GCP_REGION || 'us-central1' }}" >> "${GITHUB_ENV}"
+          echo "AR_REPOSITORY=${{ vars.AR_REPOSITORY || 'store-backend-service-dev' }}" >> "${GITHUB_ENV}"
+          echo "IMAGE_NAME=${{ vars.IMAGE_NAME || 'store-backend-service' }}" >> "${GITHUB_ENV}"
+          echo "IMAGE_URI=${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID || 'directed-relic-489223-a2' }}/${{ vars.AR_REPOSITORY || 'store-backend-service-dev' }}/${{ vars.IMAGE_NAME || 'store-backend-service' }}:${{ github.sha }}" >> "${GITHUB_ENV}"
 
       - name: Validate required CI/CD configuration
         run: |
@@ -155,11 +159,19 @@ jobs:
     needs: [unit_tests, integration_tests, terraform_plan, docker_build]
     if: github.ref == 'refs/heads/main' && needs.unit_tests.result == 'success' && needs.integration_tests.result == 'success' && needs.terraform_plan.result == 'success' && needs.docker_build.result == 'success'
     env:
-      IMAGE_URI: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       TF_JWT_SECRET: ${{ secrets.TF_VAR_JWT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Compute deployment variables
+        run: |
+          set -euo pipefail
+          echo "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID || 'directed-relic-489223-a2' }}" >> "${GITHUB_ENV}"
+          echo "GCP_REGION=${{ vars.GCP_REGION || 'us-central1' }}" >> "${GITHUB_ENV}"
+          echo "AR_REPOSITORY=${{ vars.AR_REPOSITORY || 'store-backend-service-dev' }}" >> "${GITHUB_ENV}"
+          echo "IMAGE_NAME=${{ vars.IMAGE_NAME || 'store-backend-service' }}" >> "${GITHUB_ENV}"
+          echo "IMAGE_URI=${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID || 'directed-relic-489223-a2' }}/${{ vars.AR_REPOSITORY || 'store-backend-service-dev' }}/${{ vars.IMAGE_NAME || 'store-backend-service' }}:${{ github.sha }}" >> "${GITHUB_ENV}"
 
       - name: Validate required CI/CD configuration
         run: |
@@ -184,7 +196,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Configure Docker auth for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+        run: gcloud auth configure-docker "$GCP_REGION-docker.pkg.dev" --quiet
 
       - name: Build and push image
         run: |
