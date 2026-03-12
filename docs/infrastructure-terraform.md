@@ -72,3 +72,10 @@ Required GitHub repository **Variables**:
 - `GCP_REGION`
 - `AR_REPOSITORY`
 - `IMAGE_NAME`
+
+If variables are not set, workflow defaults are:
+
+- `GCP_PROJECT_ID=directed-relic-489223-a2`
+- `GCP_REGION=us-central1`
+- `AR_REPOSITORY=store-backend-service-dev`
+- `IMAGE_NAME=store-backend-service`

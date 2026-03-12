@@ -11,6 +11,10 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'directed-relic-489223-a2' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+  AR_REPOSITORY: ${{ vars.AR_REPOSITORY || 'store-backend-service-dev' }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'store-backend-service' }}
 
 jobs:
   unit_tests:
@@ -86,11 +90,21 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
     env:
-      IMAGE_URI: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPOSITORY }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}
+      IMAGE_URI: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       TF_JWT_SECRET: ${{ secrets.TF_VAR_JWT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate required CI/CD configuration
+        run: |
+          set -euo pipefail
+          test -n "${{ secrets.GCP_WIF_PROVIDER }}" || { echo "::error::Missing secret GCP_WIF_PROVIDER"; exit 1; }
+          test -n "${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}" || { echo "::error::Missing secret GCP_WIF_SERVICE_ACCOUNT"; exit 1; }
+          test -n "${{ secrets.TF_BACKEND_BUCKET }}" || { echo "::error::Missing secret TF_BACKEND_BUCKET"; exit 1; }
+          test -n "${{ secrets.TF_BACKEND_PREFIX }}" || { echo "::error::Missing secret TF_BACKEND_PREFIX"; exit 1; }
+          test -n "${{ secrets.TF_VAR_JWT_SECRET }}" || { echo "::error::Missing secret TF_VAR_JWT_SECRET"; exit 1; }
+          echo "Using IMAGE_URI=${IMAGE_URI}"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -141,11 +155,21 @@ jobs:
     needs: [unit_tests, integration_tests, terraform_plan, docker_build]
     if: github.ref == 'refs/heads/main' && needs.unit_tests.result == 'success' && needs.integration_tests.result == 'success' && needs.terraform_plan.result == 'success' && needs.docker_build.result == 'success'
     env:
-      IMAGE_URI: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.AR_REPOSITORY }}/${{ vars.IMAGE_NAME }}:${{ github.sha }}
+      IMAGE_URI: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       TF_JWT_SECRET: ${{ secrets.TF_VAR_JWT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate required CI/CD configuration
+        run: |
+          set -euo pipefail
+          test -n "${{ secrets.GCP_WIF_PROVIDER }}" || { echo "::error::Missing secret GCP_WIF_PROVIDER"; exit 1; }
+          test -n "${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}" || { echo "::error::Missing secret GCP_WIF_SERVICE_ACCOUNT"; exit 1; }
+          test -n "${{ secrets.TF_BACKEND_BUCKET }}" || { echo "::error::Missing secret TF_BACKEND_BUCKET"; exit 1; }
+          test -n "${{ secrets.TF_BACKEND_PREFIX }}" || { echo "::error::Missing secret TF_BACKEND_PREFIX"; exit 1; }
+          test -n "${{ secrets.TF_VAR_JWT_SECRET }}" || { echo "::error::Missing secret TF_VAR_JWT_SECRET"; exit 1; }
+          echo "Using IMAGE_URI=${IMAGE_URI}"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -160,7 +184,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Configure Docker auth for Artifact Registry
-        run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
       - name: Build and push image
         run: |
